@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earthquake Detector - ESP32 Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Floating text background -->
+    <div class="floating-text">Munni</div>
+    <div class="floating-text">aaravinipatipatni</div>
+    <div class="floating-text">divendr bhai ham se na miloge</div>
+    <div class="floating-text">🌍 ESP32</div>
+
+    <header>
+        <div class="logo">⚡ EarthquakeDetector</div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </header>
+
+    <main>
+        <!-- Introduction Section -->
+        <section>
+            <h1>Build Your Own Earthquake Detection System</h1>
+            <p class="subtitle">A complete guide to creating a real-time seismic detector using ESP32, ADXL345, and Blynk IoT monitoring.</p>
+            
+            <div class="intro-grid">
+                <div class="info-card">
+                    <h3>⚙️ What You'll Build</h3>
+                    <p>A fully functional earthquake detection system that monitors real-time acceleration data, triggers alarms when seismic activity is detected, and sends live updates to your Blynk app accessible from anywhere.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🎯 Key Features</h3>
+                    <ul class="step-list">
+                        <li>Real-time acceleration monitoring</li>
+                        <li>Automatic earthquake detection</li>
+                        <li>Visual & audio alarms</li>
+                        <li>Blynk Cloud monitoring</li>
+                        <li>OLED display feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Components Section -->
+        <section>
+            <h2>Required Components</h2>
+            <div class="components-grid">
+                <div class="component">
+                    <div class="component-icon">🎯</div>
+                    <h3>ESP32</h3>
+                    <p>38-pin DevKit</p>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📍</div>
+                    <h3>ADXL345</h3>
+                    <p>3-axis Accelerometer</p>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📊</div>
+                    <h3>SSD1306 OLED</h3>
+                    <p>128x64 Display</p>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔊</div>
+                    <h3>Active Buzzer</h3>
+                    <p>5V or 3.3V</p>
+                </div>
+                <div class="component">
+                    <div class="component-icon">💡</div>
+                    <h3>LED</h3>
+                    <p>With 220Ω resistor</p>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔗</div>
+                    <h3>Jumper Wires</h3>
+                    <p>Multiple connections</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wiring Section -->
+        <section>
+            <h2>Wiring Connections</h2>
+            <p>Connect your components to the ESP32 exactly as shown below. <span class="highlight">Both ADXL345 and OLED share the same I2C bus</span> on GPIO 21 & 22.</p>
+            
+            <table class="wiring-table">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Pin/Wire</th>
+                        <th>ESP32 Pin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ADXL345</td>
+                        <td>VCC</td>
+                        <td>3.3V</td>
+                    </tr>
+                    <tr>
+                        <td>ADXL345</td>
+                        <td>GND</td>
+                        <td>GND</td>
+                    </tr>
+                    <tr>
+                        <td>ADXL345</td>
+                        <td>SDA</td>
+                        <td>GPIO 21</td>
+                    </tr>
+                    <tr>
+                        <td>ADXL345</td>
+                        <td>SCL</td>
+                        <td>GPIO 22</td>
+                    </tr>
+                    <tr>
+                        <td>OLED Display</td>
+                        <td>VCC</td>
+                        <td>3.3V</td>
+                    </tr>
+                    <tr>
+                        <td>OLED Display</td>
+                        <td>GND</td>
+                        <td>GND</td>
+                    </tr>
+                    <tr>
+                        <td>OLED Display</td>
+                        <td>SDA</td>
+                        <td>GPIO 21</td>
+                    </tr>
+                    <tr>
+                        <td>OLED Display</td>
+                        <td>SCL</td>
+                        <td>GPIO 22</td>
+                    </tr>
+                    <tr>
+                        <td>Buzzer</td>
+                        <td>Positive (+)</td>
+                        <td>GPIO 2</td>
+                    </tr>
+                    <tr>
+                        <td>Buzzer</td>
+                        <td>Negative (-)</td>
+                        <td>GND</td>
+                    </tr>
+                    <tr>
+                        <td>LED</td>
+                        <td>Positive (+)</td>
+                        <td>GPIO 4 (+ 220Ω)</td>
+                    </tr>
+                    <tr>
+                        <td>LED</td>
+                        <td>Negative (-)</td>
+                        <td>GND</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Arduino Code Section -->
+        <section>
+            <h2>Arduino Sketch Code (Copy & Paste Ready)</h2>
+            <p>Just copy the code below and paste it into Arduino IDE. <strong>Change YOUR_SSID and YOUR_PASSWORD to your WiFi details!</strong></p>
+            
+            <div class="code-block" id="codeBlock"><button class="copy-btn" onclick="copyCode()">📋 Copy Code</button><code>#include <Wire.h>
+#include <Adafruit_ADXL345_U.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+
+#define BLYNK_TEMPLATE_ID "TMPL3Du2mhNke"
+#define BLYNK_TEMPLATE_NAME "Earthquake detection"
+#define BLYNK_AUTH_TOKEN "3-k-zMDSoZhFzag-KgPBcdSOpgvH77iu"
+
+char ssid[] = "YOUR_SSID";
+char pass[] = "YOUR_PASSWORD";
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
+
+const int BUZZER_PIN = 2;
+const int LED_PIN = 4;
+const float THRESHOLD = 15.0;
+const int ALARM_DURATION = 5000;
+const int BUZZ_PATTERN = 100;
+
+float maxAcceleration = 0;
+unsigned long alarmStartTime = 0;
+bool alarmActive = false;
+unsigned long lastBlynkSend = 0;
+const int BLYNK_SEND_INTERVAL = 500;
+
+void setup() {
+  Serial.begin(115200);
+  delay(100);
+  
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(LED_PIN, LOW);
+  
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED init failed");
+    while (1);
+  }
+  
+  if (!accel.begin()) {
+    Serial.println("ADXL345 not found");
+    while (1);
+  }
+  
+  accel.setRange(ADXL345_RANGE_16_G);
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("Connecting WiFi...");
+  display.display();
+  
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  
+  Serial.println("System Ready!");
+}
+
+void loop() {
+  if (Blynk.connected()) {
+    Blynk.run();
+  }
+  
+  sensors_event_t event;
+  accel.getEvent(&event);
+  
+  float magnitude = sqrt(event.acceleration.x * event.acceleration.x +
+                         event.acceleration.y * event.acceleration.y +
+                         event.acceleration.z * event.acceleration.z);
+  
+  if (magnitude > maxAcceleration) {
+    maxAcceleration = magnitude;
+  }
+  
+  if (magnitude > THRESHOLD && !alarmActive) {
+    alarmActive = true;
+    alarmStartTime = millis();
+    Serial.println("EARTHQUAKE DETECTED!");
+    Blynk.logEvent("earthquake_alert", "Earthquake detected!");
+  }
+  
+  if (alarmActive) {
+    if (millis() - alarmStartTime < ALARM_DURATION) {
+      if (((millis() - alarmStartTime) / BUZZ_PATTERN) % 2 == 0) {
+        digitalWrite(BUZZER_PIN, HIGH);
+        digitalWrite(LED_PIN, HIGH);
+      } else {
+        digitalWrite(BUZZER_PIN, LOW);
+        digitalWrite(LED_PIN, LOW);
+      }
+    } else {
+      digitalWrite(BUZZER_PIN, LOW);
+      digitalWrite(LED_PIN, LOW);
+      alarmActive = false;
+      maxAcceleration = 0;
+    }
+  }
+  
+  if (millis() - lastBlynkSend >= BLYNK_SEND_INTERVAL && Blynk.connected()) {
+    Blynk.virtualWrite(V0, magnitude);
+    Blynk.virtualWrite(V1, maxAcceleration);
+    Blynk.virtualWrite(V2, alarmActive ? 1 : 0);
+    lastBlynkSend = millis();
+  }
+  
+  updateDisplay(event.acceleration.x, event.acceleration.y, 
+                event.acceleration.z, magnitude);
+  
+  delay(100);
+}
+
+void updateDisplay(float x, float y, float z, float mag) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  
+  display.println("EARTHQUAKE DETECTOR");
+  display.println("---Blynk Enabled---");
+  display.print("X: "); display.println(x, 1);
+  display.print("Y: "); display.println(y, 1);
+  display.print("Z: "); display.println(z, 1);
+  display.println("");
+  display.print("Magnitude: "); display.println(mag, 1);
+  display.print("Max: "); display.println(maxAcceleration, 1);
+  
+  if (alarmActive) {
+    display.println("");
+    display.println("!!! ALERT !!!");
+  } else {
+    display.println("");
+    if (Blynk.connected()) {
+      display.println("Status: ONLINE");
+    } else {
+      display.println("Connecting...");
+    }
+  }
+  
+  display.display();
+  
+  Serial.print("X: "); Serial.print(x, 1);
+  Serial.print(" | Y: "); Serial.print(y, 1);
+  Serial.print(" | Z: "); Serial.print(z, 1);
+  Serial.print(" | Mag: "); Serial.println(mag, 1);
+}</code></div>
+
+            <div class="alert-box">
+                <strong>⚠️ Setup Blynk:</strong> Go to blynk.cloud → Create account → New device → Copy your auth token to replace in code. Create 3 widgets: V0 (Magnitude gauge), V1 (Max gauge), V2 (Alert switch).
+            </div>
+        </section>
+
+        <!-- Quick Setup Guide -->
+        <section>
+            <h2>Quick Setup Guide</h2>
+            
+            <div class="success-box">
+                <strong>✅ 5 Simple Steps</strong>
+            </div>
+
+            <h3>Step 1: Install Arduino Libraries</h3>
+            <ul class="step-list">
+                <li>Open Arduino IDE → Tools → Manage Libraries</li>
+                <li>Search & Install: <strong>Adafruit ADXL345</strong></li>
+                <li>Search & Install: <strong>Adafruit SSD1306</strong></li>
+                <li>Search & Install: <strong>Adafruit GFX Library</strong></li>
+                <li>Search & Install: <strong>Blynk by Blynk</strong></li>
+            </ul>
+
+            <h3>Step 2: Wire Components</h3>
+            <ul class="step-list">
+                <li>Follow the wiring table above perfectly</li>
+                <li>ADXL345 & OLED share I2C bus (GPIO 21 = SDA, GPIO 22 = SCL)</li>
+                <li>Buzzer on GPIO 2, LED on GPIO 4</li>
+                <li>All GND pins connected together</li>
+            </ul>
+
+            <h3>Step 3: Update WiFi Credentials</h3>
+            <ul class="step-list">
+                <li>Replace <code>YOUR_SSID</code> with your WiFi name</li>
+                <li>Replace <code>YOUR_PASSWORD</code> with WiFi password</li>
+                <li>Keep the Blynk token as is (already configured)</li>
+            </ul>
+
+            <h3>Step 4: Upload Code</h3>
+            <ul class="step-list">
+                <li>Select Board: Tools → Board → ESP32 → ESP32 Dev Module</li>
+                <li>Select Port: Tools → Port → Choose your COM port</li>
+                <li>Click Upload button (→ arrow icon)</li>
+                <li>Wait for "Upload completed" message</li>
+            </ul>
+
+            <h3>Step 5: Test & Monitor</h3>
+            <ul class="step-list">
+                <li>Watch OLED display for real-time data</li>
+                <li>Open Blynk app to see live updates</li>
+                <li>Gently shake the device to trigger earthquake detection</li>
+                <li>Buzzer & LED should activate when threshold exceeded</li>
+            </ul>
+        </section>
+
+        <!-- Adjustable Settings -->
+        <section>
+            <h2>Adjustable Settings</h2>
+            <div class="info-card">
+                <h3>⚙️ Fine-tune Detection</h3>
+                <p><strong>THRESHOLD (15.0):</strong> Acceleration level to trigger alarm in m/s². Higher = less sensitive, Lower = more sensitive. Try 10-20.</p>
+                <p style="margin-top: 1rem;"><strong>ALARM_DURATION (5000):</strong> How long buzzer/LED stays on after detection in milliseconds. 5000 = 5 seconds.</p>
+                <p style="margin-top: 1rem;"><strong>BUZZ_PATTERN (100):</strong> Buzzer on/off interval in milliseconds. Lower = faster blinking/buzzing.</p>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section>
+            <h2>Troubleshooting</h2>
+            <div class="info-card">
+                <h3>❌ ADXL345 Not Detected</h3>
+                <p>Check GPIO 21/22 connections for SDA/SCL. Verify I2C address 0x53. Try I2C scanner from Arduino examples.</p>
+            </div>
+            <div class="info-card">
+                <h3>❌ OLED Not Displaying</h3>
+                <p>Verify 3.3V power. Check I2C address 0x3C. Both sensors must share GPIO 21 & 22.</p>
+            </div>
+            <div class="info-card">
+                <h3>❌ Blynk Not Connecting</h3>
+                <p>Verify WiFi SSID/password. Check Serial Monitor for WiFi connection status. Ensure Blynk device is added in app.</p>
+            </div>
+            <div class="info-card">
+                <h3>❌ Buzzer/LED Not Working</h3>
+                <p>Test with multimeter. Check GPIO 2/4 output. Verify buzzer polarity. Add 220Ω resistor for LED.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>🌍 Earthquake Detection System | ESP32 + Blynk IoT</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">© 2025 Made by <strong>Atharv</strong> | Open Source Project</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
